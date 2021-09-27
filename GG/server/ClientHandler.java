@@ -7,19 +7,15 @@ import java.util.Scanner;
 
 class ClientHandler implements Runnable {
 
+    private static int clientsCount = 0;
     private Server server;
     private PrintWriter outMessage;
     private Scanner inMessage;
-    private static final String HOST = "localhost";
-    private static final int port = 3443;
-    private Socket clientSocket = null;
-    private static int clientsCount = 0;
 
     public ClientHandler(Socket socket, Server server) {
         try {
             clientsCount++;
             this.server = server;
-            this.clientSocket = socket;
             this.outMessage = new PrintWriter(socket.getOutputStream());
             this.inMessage = new Scanner(socket.getInputStream());
         } catch (IOException exception) {
@@ -53,7 +49,7 @@ class ClientHandler implements Runnable {
         }
     }
 
-    public void sendMsg(String message) {
+    public void sendMessage(String message) {
         try {
             outMessage.println(message);
             outMessage.flush();

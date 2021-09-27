@@ -2,43 +2,42 @@ package server;
 
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.ArrayList;
+import java.util.List;
 
 class Server {
 
-    static final int PORT = 3443;
-    private ArrayList<ClientHandler> clients = new ArrayList<>();
+    private static final int PORT = 3443;
+    private final List<ClientHandler> clients = new ArrayList<>();
 
     public Server() {
-        Socket clientSocket = null;
-        ServerSocket serverSocket = null;
-
-        try {
-            serverSocket = new ServerSocket(PORT);
+        // В Java есть специальная конструкция, которая называется try-with-resources. Её смысл в том,
+        // что она автоматически вызывает метод `close()` в конце блока кода. Воспользовавшись ей, можно сделать
+        // код немного короче.
+        //
+        // 🎓 Reference: https://www.baeldung.com/java-try-with-resources
+        // 🎓 Discussion: https://stackoverflow.com/questions/27231193/try-with-resources-closes-sockets-of-spawned-childs
+        try (var serverSocket = new ServerSocket(PORT)) {
             System.out.println("Server started!");
             while (true) {
-                clientSocket = serverSocket.accept();
-                ClientHandler client = new ClientHandler(clientSocket, this);
-                clients.add(client);
-                new Thread(client).start();
+                var clientSocket = serverSocket.accept();
+
+                var clientHandler = new ClientHandler(clientSocket, this);
+                clients.add(clientHandler);
+
+                var thread = new Thread(clientHandler);
+                thread.start();
             }
-        } catch (IOException exception) {
-            exception.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         } finally {
-            try {
-                clientSocket.close();
-                System.out.println("Server stopped");
-                serverSocket.close();
-            } catch (IOException exception) {
-                exception.printStackTrace();
-            }
+            System.out.println("Server stopped");
         }
     }
 
     public void sendMessageToAllClients(String message) {
         for (ClientHandler o : clients) {
-            o.sendMsg(message);
+            o.sendMessage(message);
         }
     }
 
